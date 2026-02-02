@@ -1,34 +1,316 @@
-# Gradle files
-.gradle/
-build/
+import React, { useState } from 'react';
+import { StyleSheet, Text, View, ScrollView, TouchableOpacity, SafeAreaView, Linking, Modal, TextInput, Alert, KeyboardAvoidingView, Platform } from 'react-native';
 
-# Local configuration file (sdk path, etc)
-local.properties
+const translations = {
+  en: {
+    hospitality: "Hospitality & Food (खान-पान)",
+    finance: "Finance & Strategy",
+    marketing: "Marketing & Research",
+    travel: "Travel & Support",
+    tagline: "Trusted Multi-Sector Solutions",
+    viewProfile: "📄 View Registration Profile",
+    quickBooking: "Quick Booking",
+    confirmWA: "Confirm via WhatsApp",
+    goBack: "Go Back",
+    namePlace: "Your Full Name",
+    descPlace: "Describe requirements (Items, Qty, Dates)...",
+    calcTitle: "AI Budget Estimator (Note-This is AI Generated Calculation, Real calculation may",
+    calcBtn: "🧮 Calculate My Budget"
+  },
+  hi: {
+    hospitality: "आतिथ्य और भोजन (खान-पान)",
+    finance: "वित्त और रणनीति",
+    marketing: "विपणन और अनुसंधान",
+    travel: "यात्रा और सहायता",
+    tagline: "विश्वसनीय बहु-क्षेत्रीय समाधान",
+    viewProfile: "📄 पंजीकरण प्रोफ़ाइल देखें",
+    quickBooking: "त्वरित बुकिंग",
+    confirmWA: "व्हाट्सएप से भेजें",
+    goBack: "वापस जाएं",
+    namePlace: "आपका नाम",
+    descPlace: "विवरण लिखें (सामान, मात्रा, तारीख)...",
+    calcTitle: "AI बजट कैलकुलेटर",
+    calcBtn: "🧮 बजट की गणना करें"
+  },
+  or: {
+    hospitality: "ଆତିଥ୍ୟ ଏବଂ ଖାଦ୍ୟ (ଖାନ-ପାନ)",
+    finance: "ଅର୍ଥ ଏବଂ ରଣନୀତି",
+    marketing: "ମାର୍କେଟିଂ ଏବଂ ଅନୁସନ୍ଧାନ",
+    travel: "ଭ୍ରମଣ ଏବଂ ସହାୟତା",
+    tagline: "ବିଶ୍ୱସନୀୟ ବହୁ-କ୍ଷେତ୍ର ସମାଧାନ",
+    viewProfile: "📄 ପଞ୍ଜୀକରଣ ପ୍ରୋଫାଇଲ୍ ଦେଖନ୍ତୁ",
+    quickBooking: "ଶୀଘ୍ର ବୁକିଂ",
+    confirmWA: "WhatsApp ମାଧ୍ୟମରେ ନିଶ୍ଚିତ କରନ୍ତୁ",
+    goBack: "ଫେରିଯାଅ",
+    namePlace: "ଆପଣଙ୍କର ନାମ",
+    descPlace: "ଆବଶ୍ୟକତା ବର୍ଣ୍ଣନା କରନ୍ତୁ...",
+    calcTitle: "AI ବଜେଟ୍ କାଲକୁଲେଟର",
+    calcBtn: "🧮 ବଜେଟ୍ ଗଣନା କରନ୍ତୁ"
+  }
+};
 
-# Log/OS Files
-*.log
+const ALL_SERVICES = (lang) => [
+  {
+    category: translations[lang].hospitality,
+    items: [
+      { id: '1', title: 'Event Catering (Sanskar खान-पान)', desc: 'Professional food and beverage for weddings and corporate events.', icon: '🍴', color: '#f59e0b', aiPrompt: '🧮 AI Calculator: Guest Count x Plate Rate. Specify: Event type, Date, and Veg/Pure Veg preference.', whatsappHeader: 'CATERING INQUIRY', rate: 500 },
+      { id: '9', title: 'Wholesale Trade (Sarvottam Trading)', desc: 'Trading of quality edible oils, fats, sugar, and spices.', icon: '🛒', color: '#064e3b', aiPrompt: '📦 Wholesale Guide: List items (Oil/Spices), Quantity (Bags/Tins), and Delivery Location.', whatsappHeader: 'WHOLESALE ORDER', rate: 2000 },
+    ]
+  },
+  {
+    category: translations[lang].finance,
+    items: [
+      { id: '2', title: 'Insurance Services (Suman Insurance)', desc: 'Life insurance and pension funding to secure your family.', icon: '🛡️', color: '#10b981', aiPrompt: '🛡️ Cover Guide: No. of members, Age groups, and desired Coverage Amount.', whatsappHeader: 'INSURANCE QUOTE', rate: 1000 },
+      { id: '3', title: 'Head Office Activities (ShriAnandKaryaHub)', desc: 'Management consultancy to oversee diverse operations.', icon: '🏢', color: '#6366f1', aiPrompt: '🏢 Admin Guide: Describe business structure and management pain points.', whatsappHeader: 'MANAGEMENT CONSULTANCY', rate: 5000 },
+    ]
+  },
+  {
+    category: translations[lang].marketing,
+    items: [
+      { id: '4', title: 'Advertising', desc: 'Strategic solutions to reach the right audience effectively.', icon: '📢', color: '#ef4444', aiPrompt: '📢 Ad Guide: Target audience, Budget range, and Goal (Sales/Awareness).', whatsappHeader: 'ADVERTISING INQUIRY', rate: 3000 },
+      { id: '5', title: 'Market Research', desc: 'In-depth research and public opinion polling services.', icon: '🔍', color: '#ec4899', aiPrompt: '🔍 Research Guide: Industry type and specific questions you want answered.', whatsappHeader: 'MARKET RESEARCH', rate: 4500 },
+    ]
+  },
+  {
+    category: translations[lang].travel,
+    items: [
+      { id: '6', title: 'Travel Agency (Sarvottam Tourist)', desc: 'Complete travel agency activities for all trips.', icon: '✈️', color: '#0ea5e9', aiPrompt: '✈️ Travel Guide: Destination, Travel Dates, and No. of Passengers.', whatsappHeader: 'TRAVEL BOOKING', rate: 1500 },
+      { id: '7', title: 'Tour Operator (Sarvottam Tourist)', desc: 'Professional tour operator services for groups.', icon: '🧳', color: '#8b5cf6', aiPrompt: '🧳 Tour Guide: Group size, Type (Adventure/Luxury), and Duration.', whatsappHeader: 'TOUR PACKAGE', rate: 2500 },
+    ]
+  }
+];
 
-# Android Studio generated files and folders
-captures/
-.externalNativeBuild/
-.cxx/
-*.aab
-*.apk
-output-metadata.json
+export default function App() {
+  const [lang, setLang] = useState('en');
+  const [modalVisible, setModalVisible] = useState(false);
+  const [aboutModalVisible, setAboutModalVisible] = useState(false);
+  const [calcModalVisible, setCalcModalVisible] = useState(false);
+  const [activeService, setActiveService] = useState(null);
+  const [userName, setUserName] = useState('');
+  const [userNeed, setUserNeed] = useState('');
+  const [meetingType, setMeetingType] = useState('Online');
+  
+  // Calculator States
+  const [calcInput, setCalcInput] = useState('');
+  const [estimate, setEstimate] = useState(null);
 
-# IntelliJ
-*.iml
-.idea/
-misc.xml
-deploymentTargetDropDown.xml
-render.experimental.xml
+  const openBooking = (service) => {
+    setActiveService(service);
+    setModalVisible(true);
+  };
 
-# Keystore files
-*.jks
-*.keystore
+  const handleCalculate = () => {
+    if (!activeService || !calcInput) return;
+    const total = parseInt(calcInput) * activeService.rate;
+    setEstimate(total);
+  };
 
-# Google Services (e.g. APIs or Firebase)
-google-services.json
+  const submitToWhatsApp = () => {
+    if (!userName || !userNeed) {
+      Alert.alert("Input Required", "Please provide your name and requirements.");
+      return;
+    }
+    const message = `*${activeService.whatsappHeader}*%0A--------------------------%0A*Client:* ${userName}%0A*Needs:* ${userNeed}%0A*Consultation:* ${meetingType}%0A--------------------------`;
+    Linking.openURL(`https://wa.me/918176959950?text=${message}`);
+    setModalVisible(false);
+    setUserName('');
+    setUserNeed('');
+  };
 
-# Android Profiling
-*.hprof
+  const t = translations[lang];
+
+  return (
+    <SafeAreaView style={styles.safeArea}>
+      <View style={styles.langBar}>
+        {['en', 'hi', 'or'].map((l) => (
+          <TouchableOpacity key={l} onPress={() => setLang(l)} style={[styles.langBtn, lang === l && styles.langBtnActive]}>
+            <Text style={[styles.langText, lang !== l && {color: '#1E293B'}]}>{l === 'en' ? 'English' : l === 'hi' ? 'हिन्दी' : 'ଓଡ଼ିଆ'}</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+
+      <View style={styles.topHeader}>
+        <Text style={styles.headerTitle}>Abhineshwar ENTERPRISES</Text>
+        <Text style={styles.headerTagline}>{t.tagline}</Text>
+        
+        <View style={{flexDirection: 'row', justifyContent: 'center', gap: 10}}>
+          <TouchableOpacity onPress={() => setAboutModalVisible(true)} style={styles.aboutTrigger}>
+            <Text style={styles.aboutTriggerText}>{t.viewProfile}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => setCalcModalVisible(true)} style={[styles.aboutTrigger, {backgroundColor: '#16A34A'}]}>
+            <Text style={[styles.aboutTriggerText, {color: '#fff'}]}>{t.calcBtn}</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollPadding}>
+        {ALL_SERVICES(lang).map((section, idx) => (
+          <View key={idx} style={styles.section}>
+            <Text style={styles.sectionLabel}>{section.category}</Text>
+            {section.items.map((item) => (
+              <TouchableOpacity key={item.id} style={styles.card} onPress={() => openBooking(item)}>
+                <View style={[styles.iconWrapper, { backgroundColor: item.color + '15' }]}>
+                  <Text style={{fontSize: 24}}>{item.icon}</Text>
+                </View>
+                <View style={styles.cardContent}>
+                  <Text style={styles.serviceTitle}>{item.title}</Text>
+                  <Text style={styles.serviceDesc}>{item.desc}</Text>
+                </View>
+              </TouchableOpacity>
+            ))}
+          </View>
+        ))}
+      </ScrollView>
+
+      {/* AI Budget Calculator Modal */}
+      <Modal animationType="slide" transparent={true} visible={calcModalVisible}>
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContent, {height: '70%'}]}>
+            <View style={styles.modalIndicator} />
+            <Text style={styles.modalTitle}>{t.calcTitle}</Text>
+            <Text style={styles.aboutBody}>Select a service category and enter the units (guests, days, or items) to get an AI estimate.</Text>
+            
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{marginVertical: 15, maxHeight: 50}}>
+              {ALL_SERVICES(lang).flatMap(s => s.items).map(item => (
+                <TouchableOpacity 
+                  key={item.id} 
+                  onPress={() => {setActiveService(item); setEstimate(null);}}
+                  style={[styles.langBtn, activeService?.id === item.id && {backgroundColor: '#1E293B'}]}
+                >
+                  <Text style={{color: activeService?.id === item.id ? '#fff' : '#1E293B', fontSize: 12}}>{item.icon} {item.title.split(' (')[0]}</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+
+            <TextInput 
+              style={styles.input} 
+              placeholder="Enter Quantity (e.g. 100 guests or 5 days)" 
+              keyboardType="numeric"
+              value={calcInput}
+              onChangeText={setCalcInput}
+            />
+
+            <TouchableOpacity style={[styles.submitBtn, {backgroundColor: '#0F172A'}]} onPress={handleCalculate}>
+              <Text style={styles.submitText}>✨ Generate AI Estimate</Text>
+            </TouchableOpacity>
+
+            {estimate && (
+              <View style={[styles.aiHintBox, {marginTop: 20}]}>
+                <Text style={styles.aiHintTitle}>Estimated Budget:</Text>
+                <Text style={{fontSize: 24, fontWeight: 'bold', color: '#0369A1'}}>₹{estimate.toLocaleString('en-IN')}</Text>
+                <Text style={styles.aiHintText}>*This is an automated estimate based on standard rates. Final quotes may vary.</Text>
+              </View>
+            )}
+
+            <TouchableOpacity style={{marginTop: 20}} onPress={() => setCalcModalVisible(false)}>
+              <Text style={styles.cancelText}>{t.goBack}</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Booking Modal */}
+      <Modal animationType="slide" transparent={true} visible={modalVisible}>
+        <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalIndicator} />
+            <Text style={styles.modalTitle}>{t.quickBooking}</Text>
+            <Text style={styles.modalSubTitle}>{activeService?.title}</Text>
+            <TextInput style={styles.input} placeholder={t.namePlace} placeholderTextColor="#94A3B8" value={userName} onChangeText={setUserName} />
+            <View style={styles.aiHintBox}>
+              <Text style={styles.aiHintTitle}>✨ AI Expert Advice:</Text>
+              <Text style={styles.aiHintText}>{activeService?.aiPrompt}</Text>
+            </View>
+            <TextInput 
+              style={[styles.input, { height: 100, textAlignVertical: 'top' }]} 
+              placeholder={t.descPlace} 
+              placeholderTextColor="#94A3B8"
+              multiline 
+              value={userNeed} 
+              onChangeText={setUserNeed} 
+            />
+            <View style={styles.row}>
+              <TouchableOpacity style={[styles.typeBtn, meetingType === 'Online' && styles.activeBtn]} onPress={() => setMeetingType('Online')}>
+                <Text style={meetingType === 'Online' ? styles.activeText : styles.typeText}>🌐 Online</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={[styles.typeBtn, meetingType === 'Offline' && styles.activeBtn]} onPress={() => setMeetingType('Offline')}>
+                <Text style={meetingType === 'Offline' ? styles.activeText : styles.typeText}>📍 Office</Text>
+              </TouchableOpacity>
+            </View>
+            <TouchableOpacity style={styles.submitBtn} onPress={submitToWhatsApp}>
+              <Text style={styles.submitText}>{t.confirmWA}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => setModalVisible(false)}>
+              <Text style={styles.cancelText}>{t.goBack}</Text>
+            </TouchableOpacity>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
+
+      {/* Profile Modal */}
+      <Modal animationType="fade" transparent={true} visible={aboutModalVisible}>
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContent, { maxHeight: '85%', borderRadius: 25, marginBottom: 20 }]}>
+            <Text style={styles.modalTitle}>Enterprise Profile (Pro-Shri Anand Pandey Ji)</Text>
+            <Text style={styles.aboutBody}>Abhineshwar Enterprises is a Govt. of India registered Micro Enterprise.</Text>
+            <View style={styles.certCard}>
+              <Text style={styles.certLabel}>Udyam Reg No:</Text>
+              <Text style={styles.certValue}>UDYAM-UP-19-0006708</Text>
+              <Text style={styles.certLabel}>Incorp. Date:</Text>
+              <Text style={styles.certValue}>08/10/2022</Text>
+              <Text style={styles.certLabel}>Units:</Text>
+              <Text style={styles.certValue}>ShriAnandKaryaHub, ShriAnandKhanPan, Sarvottam Tourist Service, Sarvottam Traders</Text>
+              <Text style={styles.certLabel}>Location:</Text>
+              <Text style={styles.certValue}>Varanasi, Uttar Pradesh</Text>
+            </View>
+            <TouchableOpacity style={[styles.submitBtn, { backgroundColor: '#87CEEB', marginTop: 15 }]} onPress={() => setAboutModalVisible(false)}>
+              <Text style={[styles.submitText, {color: '#1E293B'}]}>{t.goBack}</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  safeArea: { flex: 1, backgroundColor: '#F1F5F9' },
+  langBar: { flexDirection: 'row', justifyContent: 'center', backgroundColor: '#87CEEB', paddingVertical: 12, borderBottomWidth: 0.5, borderBottomColor: '#B0E2FF' },
+  langBtn: { paddingHorizontal: 15, paddingVertical: 6, borderRadius: 20, marginHorizontal: 5, borderWidth: 1, borderColor: '#1E293B', height: 35, justifyContent: 'center' },
+  langBtnActive: { backgroundColor: '#1E293B' },
+  langText: { color: '#fff', fontSize: 11, fontWeight: 'bold' },
+  topHeader: { padding: 25, backgroundColor: '#87CEEB', borderBottomLeftRadius: 20, borderBottomRightRadius: 20 },
+  headerTitle: { fontSize: 20, fontWeight: '900', color: '#1E293B', textAlign: 'center' },
+  headerTagline: { fontSize: 13, color: '#334155', textAlign: 'center', marginTop: 5 },
+  aboutTrigger: { marginTop: 12, backgroundColor: '#1E293B', padding: 8, borderRadius: 10, alignSelf: 'center' },
+  aboutTriggerText: { color: '#87CEEB', fontSize: 12, fontWeight: 'bold' },
+  scrollPadding: { paddingBottom: 40 },
+  section: { marginTop: 25, paddingHorizontal: 20 },
+  sectionLabel: { fontSize: 11, fontWeight: '800', color: '#64748B', textTransform: 'uppercase', marginBottom: 12 },
+  card: { backgroundColor: '#fff', borderRadius: 16, padding: 18, marginBottom: 15, flexDirection: 'row', alignItems: 'center', elevation: 3 },
+  iconWrapper: { width: 55, height: 55, borderRadius: 15, justifyContent: 'center', alignItems: 'center', marginRight: 15 },
+  cardContent: { flex: 1 },
+  serviceTitle: { fontSize: 16, fontWeight: '700', color: '#1E293B' },
+  serviceDesc: { fontSize: 12, color: '#64748B', marginTop: 4 },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(15, 23, 42, 0.8)', justifyContent: 'flex-end' },
+  modalContent: { backgroundColor: '#fff', borderTopLeftRadius: 30, borderTopRightRadius: 30, padding: 25 },
+  modalIndicator: { width: 40, height: 5, backgroundColor: '#E2E8F0', borderRadius: 10, alignSelf: 'center', marginBottom: 20 },
+  modalTitle: { fontSize: 22, fontWeight: '800' },
+  modalSubTitle: { fontSize: 16, color: '#3b82f6', marginBottom: 20 },
+  aiHintBox: { backgroundColor: '#F0F9FF', padding: 15, borderRadius: 12, borderLeftWidth: 4, borderLeftColor: '#0EA5E9', marginBottom: 15 },
+  aiHintTitle: { fontSize: 13, fontWeight: 'bold', color: '#0369A1' },
+  aiHintText: { fontSize: 13, color: '#0C4A6E', fontStyle: 'italic' },
+  input: { backgroundColor: '#F8FAFC', borderRadius: 12, padding: 15, marginBottom: 15, fontSize: 15, borderWidth: 1, borderColor: '#E2E8F0', color: '#1E293B' },
+  row: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 25 },
+  typeBtn: { flex: 0.48, padding: 14, borderRadius: 12, borderWidth: 1, borderColor: '#E2E8F0', alignItems: 'center' },
+  activeBtn: { backgroundColor: '#3b82f6', borderColor: '#3b82f6' },
+  typeText: { color: '#64748B', fontWeight: 'bold' },
+  activeText: { color: '#fff', fontWeight: 'bold' },
+  submitBtn: { backgroundColor: '#16A34A', padding: 18, borderRadius: 15, alignItems: 'center' },
+  submitText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
+  cancelText: { textAlign: 'center', color: '#94A3B8', marginTop: 15 },
+  aboutBody: { fontSize: 14, color: '#475569', lineHeight: 20, marginVertical: 10 },
+  certCard: { backgroundColor: '#F8FAFC', padding: 15, borderRadius: 15, borderStyle: 'dashed', borderWidth: 1, borderColor: '#CBD5E1' },
+  certLabel: { fontSize: 11, fontWeight: 'bold', color: '#64748B', textTransform: 'uppercase' },
+  certValue: { fontSize: 14, color: '#1E293B', marginBottom: 8 }
+});
